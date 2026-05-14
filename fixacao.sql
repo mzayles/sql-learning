@@ -101,3 +101,51 @@ ON c.cod_cli = p.cod_cli
 GROUP BY c.cod_cli, c.nome;
 
 SELECT nome, MAX(valor) AS valor FROM produto GROUP BY nome LIMIT 3;
+
+-- Triggers e Procedures
+ALTER TABLE produto ADD valor_desconto DECIMAL(6,2);
+
+CREATE TRIGGER trProduto BEFORE INSERT ON produto
+FOR EACH ROW
+SET NEW.valor_desconto = NEW.valor * 0.10;
+
+DROP TRIGGER trProduto;
+
+ALTER TABLE produto MODIFY cod_prod INT AUTO_INCREMENT;
+
+DELIMITER $$
+CREATE PROCEDURE sp_cadastrar_produto(IN nome VARCHAR(100), IN valor DECIMAL(6,2), IN cliente VARCHAR(100)) 
+BEGIN
+	INSERT INTO produto(nome, valor, cod_cli) VALUES (nome, valor, cliente);
+END $$
+DELIMITER ;
+
+DROP PROCEDURE sp_cadastrar_produto;
+
+CALL sp_cadastrar_produto("Mouse Logi Tech", 70.00, 1);
+
+SELECT * FROM produto;
+
+CREATE TABLE cliente_removido (
+ cod_cli INT,
+ nome VARCHAR(40),
+ email VARCHAR(30),
+ data_remocao DATETIME
+);
+
+DELIMITER $$
+CREATE TRIGGER tr_cliente AFTER DELETE ON cliente
+FOR EACH ROW
+BEGIN
+	INSERT INTO cliente_removido(cod_cli, email, nome, data_remocao)
+    VALUES (OLD.cod_cli, OLD.email, OLD.nome, NOW());
+END $$
+DELIMITER ;
+
+SELECT * FROM cliente;
+
+DELETE FROM endereco WHERE cod_cli = 2;
+DELETE FROM produto WHERE cod_cli = 2;
+DELETE FROM cliente WHERE cod_cli = 2;
+
+SELECT * FROM cliente_removido;
